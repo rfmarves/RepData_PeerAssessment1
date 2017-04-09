@@ -1,17 +1,13 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-author: "Rene Marves"
-date: "8 de abril de 2017"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
+Rene Marves  
+8 de abril de 2017  
 
 
 ## Loading and preprocessing the data
 First, the data table is loaded directly from the zip file.  Then the date column is converted to a date field.
 
-```{r load_data, warning=FALSE, message=FALSE, results='hide'}
+
+```r
 # List of packages for session
 .packages = c("ggplot2", "lubridate", "dplyr")
 # using lubridate to avoid regional settings issues with language
@@ -34,38 +30,55 @@ dt$weekday <- wday(dt$date, label = TRUE, abbr = FALSE) # adds weekday to the da
 
 Here we calculate the average steps per day in an aggregate data set, using the date as the aggretation field.
 
-```{r steps per day}
+
+```r
 dailysteps <- aggregate(steps ~ date, data = dt, FUN = sum)
 qplot(dailysteps$steps, main = "Daily Steps histogram") +
   scale_y_continuous("Number of days") + 
   scale_x_continuous("Steps per day")
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/steps per day-1.png)<!-- -->
+
+```r
 steps_summary <- summary(dailysteps$steps)
 ```
 
 **Summary:**
 
-**Mean** steps per day: `r format(steps_summary[["Mean"]], scientific = F)`.
+**Mean** steps per day: 10770.
 
-**Median** steps per day: `r format(steps_summary[["Median"]], scientific = F)`.
+**Median** steps per day: 10760.
 
 
 ## What is the average daily activity pattern?
 
 Now we aggregate in a similar fashion as before, but using the interval as the agregation field.
 
-```{r average daily activity}
+
+```r
 avgint <- aggregate(steps ~ interval, data = dt, FUN = mean)
 qplot(interval, steps, data = avgint, geom = "line", main = "Average steps per interval")
+```
+
+![](PA1_template_files/figure-html/average daily activity-1.png)<!-- -->
+
+```r
 maxint <- avgint[avgint$steps == max(avgint$steps), ]$interval
 ```
 
-The interval with the highest average steps in it is interval number `r format(maxint, scientific = F)`.
+The interval with the highest average steps in it is interval number 835.
 
 ## Imputing missing values
 
 Quantifying and filling in for missing values.  Missing values will be completed using the average of the rounded interval average for the corresponding weekday of the missing value.
 
-```{r missing values}
+
+```r
 nacount <- sum(is.na(dt))
 
 # copy dataset
@@ -80,31 +93,41 @@ for(i in which(is.na(cdt$steps))) {
 }
 # clean excess variables
 rm(list=c("i", "avgstep"))
-
 ```
 
-There are `r format(nacount, scientific = F)` missing values.
+There are 2304 missing values.
 
 After filling in for missing values, this is the new data summary:
-```{r completed data histogram}
+
+```r
 dailysteps2 <- aggregate(steps ~ date, data = cdt, FUN = sum)
 qplot(dailysteps2$steps, main = "Daily Steps histogram") +
   scale_y_continuous("Number of days") + 
   scale_x_continuous("Steps per day")
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/completed data histogram-1.png)<!-- -->
+
+```r
 steps_summary2 <- summary(dailysteps2$steps)
 ```
 
 **Summary:**
 
-**Mean** steps per day: `r format(steps_summary2[["Mean"]], scientific = F)`.
+**Mean** steps per day: 10820.
 
-**Median** steps per day: `r format(steps_summary2[["Median"]], scientific = F)`.
+**Median** steps per day: 11020.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 First we tag each data point as either weekday or weekend in another field, then we graph the result.
 
-```{r activity partterns by day type}
+
+```r
 cdt$daytype <- ifelse(((cdt$weekday == "Sunday") | (cdt$weekday == "Saturday")),"weekend","weekday")
 
 wdt <- cdt %>%
@@ -115,6 +138,7 @@ wdt <- cdt %>%
 qplot(interval, Average.Steps, data = wdt, facets = daytype~., color=daytype, geom="line", main = "Average Steps during the day, by day type") +
   scale_x_continuous("Interval") +
   theme(legend.position = "none")
-
 ```
+
+![](PA1_template_files/figure-html/activity partterns by day type-1.png)<!-- -->
 
